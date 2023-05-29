@@ -1,0 +1,44 @@
+trigger:
+  - main
+  - feature/*
+
+pool:
+  vmImage: "windows-latest"
+
+variables:
+  Solution.Path: "**/*Demo.sln"
+
+steps:
+  - task: NuGetToolInstaller@1
+    displayName: "Install NuGet"
+
+  - task: NuGetCommand@2
+    displayName: "Restore solution"
+    inputs:
+      restoreSolution: "$(Solution.Path)"
+
+  - task: VSBuild@1
+    displayName: "Build solution"
+    inputs:
+      solution: "$(Solution.Path)"
+
+  - task: VisualStudioTestPlatformInstaller@1
+    displayName: "Install VS Test Platform"
+    inputs:
+      packageFeedSelector: "nugetOrg"
+      versionSelector: "latestStable"
+
+  - task: VSTest@2
+    displayName: "Execute test assemblies"
+    inputs:
+      testSelector: "testAssemblies"
+      testAssemblyVer2: |
+        **\*Specs.dll
+        !**\*TestAdapter.dll
+        !**\obj\**
+      searchFolder: "$(System.DefaultWorkingDirectory)"
+
+    env:
+      BASE_URL: "$(BASE_URL)"
+      EMAIL: "$(EMAIL)"
+      PASSWORD: "$(PASSWORD)"
